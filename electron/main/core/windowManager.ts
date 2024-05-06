@@ -77,9 +77,14 @@ export default class WindowManager extends EventEmitter {
         },
       })
       this.windows[page] = window
-      if (pageOptions.url)
+      if (pageOptions.url) {
         window.loadURL(pageOptions.url)
-
+      }
+      let devtools: BrowserWindow = new BrowserWindow()
+      // 解决 Windows 无法正常打开开发者工具的问题
+      window.webContents.setDevToolsWebContents(devtools.webContents)
+      // 打开开发者工具
+      window.webContents.openDevTools({ mode: 'detach' });
       this.initWindowListener(page)
       return window
     }
