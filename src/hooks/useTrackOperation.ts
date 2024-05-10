@@ -27,7 +27,8 @@ export function useTrackOperation() {
     }
   }, [])
   const getToPlaylistMenuItem = useCallback((trackId: number): ContextMenuItem[] => {
-    return createdPlaylist.map((list) => {
+    console.log('@@@create', createdPlaylist)
+    return createdPlaylist?.map((list) => {
       return {
         type: 'item',
         label: list.name,

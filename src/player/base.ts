@@ -71,10 +71,8 @@ export class Player {
 
     const { track, playing, volume = 0.8, currentTime, isCurrentFm } = usePlayerStore.getState()
     // this.track = track
-    if (track?.id)
-      this.track = track
-    else
-      this.track = null
+    if (track?.id) this.track = track
+    else this.track = null
     this.setVolume(volume)
     this.currentTime = currentTime
     this.playing = playing
@@ -88,8 +86,7 @@ export class Player {
     console.log('%c Start initializing the player 😆', style)
     this.initStoreEvent()
     this.initPip()
-    if (this.track?.id)
-      this.updatePlayerTrack(this.track.id, false, false, false, this.track.source?.from)
+    if (this.track?.id) this.updatePlayerTrack(this.track.id, false, false, false, this.track.source?.from)
   }
 
   initPip() {
@@ -107,17 +104,19 @@ export class Player {
   }
 
   private initStoreEvent() {
-    usePlayerStore.subscribe(state => [state.volume, state.isCurrentFm], (state, prev) => {
-      const [volume, isCurrentFm] = state
-      const [prevVolume, prevIsCurrentFm] = prev
-      if (prevVolume !== volume) {
-        this.volume = <number>volume
-        this.howler?.volume(<number>volume)
-        Howler.volume(<number>volume)
+    usePlayerStore.subscribe(
+      (state) => [state.volume, state.isCurrentFm],
+      (state, prev) => {
+        const [volume, isCurrentFm] = state
+        const [prevVolume, prevIsCurrentFm] = prev
+        if (prevVolume !== volume) {
+          this.volume = <number>volume
+          this.howler?.volume(<number>volume)
+          Howler.volume(<number>volume)
+        }
+        if (prevIsCurrentFm !== isCurrentFm) this.isCurrentFm = <boolean>isCurrentFm
       }
-      if (prevIsCurrentFm !== isCurrentFm)
-        this.isCurrentFm = <boolean>isCurrentFm
-    })
+    )
   }
 
   /**
@@ -129,30 +128,25 @@ export class Player {
    * @param from
    */
   async updatePlayerTrack(trackId: number, autoplay = true, resetProgress = true, isFm = false, from?: TrackFrom) {
-    if (!trackId)
-      return
+    if (!trackId) return
     usePlayerStore.setState({ loadingTrack: true })
     try {
       const { track, trackMeta, lyric } = await fetchTrack(trackId, from)
       // restore common mode
-      if (!isFm)
-        usePlayerStore.setState({ isCurrentFm: false })
+      if (!isFm) usePlayerStore.setState({ isCurrentFm: false })
 
       if (trackMeta.url) {
-        if (lyric)
-          track.lyric = lyric // 存入歌词
+        if (lyric) track.lyric = lyric // 存入歌词
 
         // update track source
-        if (from)
-          mixinTrackSource(track, from)
+        if (from) mixinTrackSource(track, from)
 
         track.meta = trackMeta
         // 保存到 store
         usePlayerStore.setState({
           track,
         })
-        if (resetProgress)
-          this.updateCurrentTime(0)
+        if (resetProgress) this.updateCurrentTime(0)
 
         this.track = track
         Howler.unload()
@@ -161,17 +155,16 @@ export class Player {
         const url = trackMeta.sourceFromUnlockMusic ? trackMeta.url : toHttps(trackMeta.url)
         this.howler = this.initSound(url)
         this.initMediaSession(track)
-        if (resetProgress)
-          this.setSeek(0)
-        else
-          this.setSeek(this.currentTime)
+        if (resetProgress) this.setSeek(0)
+        else this.setSeek(this.currentTime)
 
         if (autoplay) {
           this.play()
-          if (from.type !== 'local')
-            await start({ id: this.track.id })
-        }
-        else {
+          if (from.type !== 'local') {
+            console.log('@@@autoplay', from)
+            // await start({ id: this.track.id })
+          }
+        } else {
           this.pause()
         }
         this.nextLoaded = false
@@ -180,16 +173,14 @@ export class Player {
         //     await sleep(500);
         //     playerIDB.cacheTrack(trackInfo, cacheLimit);
         // }
-      }
-      else {
+      } else {
         enqueueSnackbar({ message: `${track?.name} 无法播放, 将播放下一首`, variant: 'error' })
         // toast.error(track?.name + this.t('message.can_not_play'))
         await sleep(500)
         this.next()
       }
       this.setOutPutDevice()
-    }
-    catch (e) {
+    } catch (e) {
       // stop loading
       this.trackLoaded()
     }
@@ -218,7 +209,7 @@ export class Player {
         this.trackLoaded()
         if (this.track) {
           const { name, ar = [] } = this.track
-          const artists = ar.map(a => a.name).join('&')
+          const artists = ar.map((a) => a.name).join('&')
           // global window
           document.title = `${name} - ${artists}`
           this.fixDuration()
@@ -247,7 +238,7 @@ export class Player {
     const offset = factDuration - trackDuration
     if (offset > 1000 || offset < -1000) {
       console.log(
-        `net ease返回的歌曲长度: ${this.track?.dt}， 歌曲实际长度: ${duration * 1000}， 偏差大小: ${offset}，修正`,
+        `net ease返回的歌曲长度: ${this.track?.dt}， 歌曲实际长度: ${duration * 1000}， 偏差大小: ${offset}，修正`
       )
       const storeTrack = usePlayerStore.getState().track
       if (storeTrack?.id) {
@@ -277,8 +268,7 @@ export class Player {
   }
 
   play() {
-    if (this.howler?.playing())
-      return
+    if (this.howler?.playing()) return
     usePlayerStore.setState({ playing: true })
     this.howler?.play()
     this.howler?.once('play', () => {
@@ -289,10 +279,8 @@ export class Player {
   }
 
   togglePlay() {
-    if (this.howler?.playing())
-      this.pause()
-    else
-      this.play()
+    if (this.howler?.playing()) this.pause()
+    else this.play()
   }
 
   replay() {
@@ -302,9 +290,7 @@ export class Player {
 
   load() {
     const track = playQueueStore.getState().popTrack()
-    if (track)
-      this.updatePlayerTrack(track.id, true, true, false, track.source?.from)
-
+    if (track) this.updatePlayerTrack(track.id, true, true, false, track.source?.from)
   }
 
   next() {
@@ -314,21 +300,17 @@ export class Player {
       return
     }
     const track = playQueueStore.getState().popNextTrack()
-    if (track)
-      this.updatePlayerTrack(track.id, true, true, false, track.source?.from)
-    else
-      enqueueSnackbar('往后没有更多可播放的音乐了', { variant: 'info' })
+    if (track) this.updatePlayerTrack(track.id, true, true, false, track.source?.from)
+    else enqueueSnackbar('往后没有更多可播放的音乐了', { variant: 'info' })
   }
 
   async nextFm() {
     const { isCurrentFm, updatePersonalFmList } = usePlayerStore.getState()
 
-    if (!isCurrentFm)
-      usePlayerStore.setState({ isCurrentFm: true })
+    if (!isCurrentFm) usePlayerStore.setState({ isCurrentFm: true })
 
     const track = await updatePersonalFmList()
-    if (track?.id)
-      await this.updatePlayerTrack(track.id, true, true, true)
+    if (track?.id) await this.updatePlayerTrack(track.id, true, true, true)
   }
 
   prev() {
@@ -344,12 +326,9 @@ export class Player {
       return
     }
     const track = playQueueStore.getState().popPrevTrack()
-    if (track && track.id)
-      this.updatePlayerTrack(track.id, true, true, false, track?.source?.from)
-    else
-      enqueueSnackbar('往前没有更多可播放的音乐了', { variant: 'info' })
+    if (track && track.id) this.updatePlayerTrack(track.id, true, true, false, track?.source?.from)
+    else enqueueSnackbar('往前没有更多可播放的音乐了', { variant: 'info' })
   }
-
 
   private nextTrack() {
     return playQueueStore.getState().popNextTrack()
@@ -382,14 +361,10 @@ export class Player {
         const track = playQueueStore.getState().getNextTrack()
         console.log('load next track', track)
 
-        if (track)
-          await fetchTrack(track.id, track.source?.from)
+        if (track) await fetchTrack(track.id, track.source?.from)
 
         this.nextLoaded = true
-
       }
-
-
     }
   }
 
@@ -421,8 +396,7 @@ export class Player {
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-expect-error
       const soundNode = this.howler._sounds[0]._node
-      if (outputdevice && soundNode?.setSinkId)
-        soundNode.setSinkId(outputdevice)
+      if (outputdevice && soundNode?.setSinkId) soundNode.setSinkId(outputdevice)
     }
   }
 
@@ -436,13 +410,10 @@ export class Player {
   }
 
   private endCb() {
-    if (usePlayerStore.getState().isCurrentFm)
-      this.nextFm()
-    else
-      this.next()
+    if (usePlayerStore.getState().isCurrentFm) this.nextFm()
+    else this.next()
 
-    if (this.track && this.track.source?.fromType !== 'local')
-      this.endPlay(this.track, 0, true)
+    if (this.track && this.track.source?.fromType !== 'local') this.endPlay(this.track, 0, true)
   }
 
   // 播放完毕打卡
@@ -450,22 +421,20 @@ export class Player {
     const { id, dt = 0 } = track
 
     const sourceId = track.source?.from?.id
-    if (played)
-      time = +dt / 1000
+    if (played) time = +dt / 1000
 
-    if (time) {
-      console.log('歌曲打卡', this.track?.name, Math.ceil(time), played)
-      try {
-        await end({
-          id,
-          sourceId: sourceId || '',
-          time: Math.ceil(time),
-        })
-      }
-      catch (e) {
-        console.log('打卡失败', e)
-      }
-    }
+    // if (time) {
+    //   console.log('歌曲打卡', this.track?.name, Math.ceil(time), played)
+    //   try {
+    //     await end({
+    //       id,
+    //       sourceId: sourceId || '',
+    //       time: Math.ceil(time),
+    //     })
+    //   } catch (e) {
+    //     console.log('打卡失败', e)
+    //   }
+    // }
   }
 
   private initMediaSession(track: Track) {
@@ -474,7 +443,7 @@ export class Player {
       const { ar: artist, al: album, name: title } = track
       navigator.mediaSession.metadata = new MediaMetadata({
         title,
-        artist: artist?.map(a => a.name).join('&'),
+        artist: artist?.map((a) => a.name).join('&'),
         album: album?.name ?? '',
         artwork: [
           {
@@ -522,6 +491,5 @@ export function mixinTrackSource(track: Track | Program, from: TrackFrom) {
     from,
     fromName: from.name,
   }
-  if (from.type === 'program')
-    track.program = cloneDeep(track) as Program
+  if (from.type === 'program') track.program = cloneDeep(track) as Program
 }
